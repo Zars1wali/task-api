@@ -43,6 +43,28 @@ app.post("/tasks", (req, res) => {
   res.status(201).json(task);
 });
 
+app.put("/tasks/:id", (req, res) => {
+  const task = tasks.find((t) => t.id === parseInt(req.params.id));
+  if (!task) {
+    return res.status(404).json({ error: `Task ${req.params.id} not found` });
+  }
+  if (req.body.title !== undefined && req.body.title.trim() === "") {
+    return res.status(400).json({ error: "Title cannot be empty" });
+  }
+  if (req.body.title !== undefined) task.title = req.body.title.trim();
+  if (req.body.done !== undefined) task.done = req.body.done;
+  res.json(task);
+});
+
+app.delete("/tasks/:id", (req, res) => {
+  const index = tasks.findIndex((t) => t.id === parseInt(req.params.id));
+  if (index === -1) {
+    return res.status(404).json({ error: `Task ${req.params.id} not found` });
+  }
+  tasks.splice(index, 1);
+  res.status(204).send();
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
