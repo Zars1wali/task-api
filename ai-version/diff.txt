@@ -1,0 +1,141 @@
+﻿git : warning: in the working copy of 'server.js', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git diff --no-index server.js ai-version/server.js 2>&1 | Out-File -F ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'ai-version/server.js', LF will be replaced by CRLF the next time Git touches it
+diff --git a/server.js b/ai-version/server.js
+index 3e6a055..7affdf6 100644
+--- a/server.js
++++ b/ai-version/server.js
+@@ -1,76 +1,62 @@
+-const express = require("express");
+-const swaggerUi = require("swagger-ui-express");
+-const swaggerDocument = require("./openapi.json");
+-
++const express = require('express');
+ const app = express();
++
+ app.use(express.json());
+ 
+ let tasks = [
+-  { id: 1, title: "Buy groceries", done: false },
+-  { id: 2, title: "Walk the dog", done: true },
+-  { id: 3, title: "Read a book", done: false },
++    { id: 1, title: 'Buy groceries', completed: false },
++    { id: 2, title: 'Walk the dog', completed: true },
++    { id: 3, title: 'Read a book', completed: false }
+ ];
+-let nextId = 4;
+-
+-app.get("/", (req, res) => {
+-  res.json({
+-    name: "Task API",
+-    version: "1.0",
+-    endpoints: ["/tasks"],
+-  });
+-});
+-
+-app.get("/health", (req, res) => {
+-  res.json({ status: "ok" });
+-});
+-
+-app.get("/tasks", (req, res) => {
+-  res.json(tasks);
+-});
+-
+-app.get("/tasks/:id", (req, res) => {
+-  const task = tasks.find((t) => t.id === parseInt(req.params.id));
+-  if (!task) {
+-    return res.status(404).json({ error: `Task ${req.params.id} not found` });
+-  }
+-  res.json(task);
+-});
+-
+-app.post("/tasks", (req, res) => {
+-  if (!req.body.title || req.body.title.trim() === "") {
+-    return res.status(400).json({ error: "Title is required and cannot be empty" });
+-  }
+-  const task = { id: nextId++, title: req.body.title.trim(), done: false };
+-  tasks.push(task);
+-  res.status(201).json(task);
+-});
+-
+-app.put("/tasks/:id", (req, res) => {
+-  const task = tasks.find((t) => t.id === parseInt(req.params.id));
+-  if (!task) {
+-    return res.status(404).json({ error: `Task ${req.params.id} not found` });
+-  }
+-  if (req.body.title !== undefined && req.body.title.trim() === "") {
+-    return res.status(400).json({ error: "Title cannot be empty" });
+-  }
+-  if (req.body.title !== undefined) task.title = req.body.title.trim();
+-  if (req.body.done !== undefined) task.done = req.body.done;
+-  res.json(task);
+-});
+-
+-app.delete("/tasks/:id", (req, res) => {
+-  const index = tasks.findIndex((t) => t.id === parseInt(req.params.id));
+-  if (index === -1) {
+-    return res.status(404).json({ error: `Task ${req.params.id} not found` });
+-  }
+-  tasks.splice(index, 1);
+-  res.status(204).send();
++let idCounter = 4;
++
++// Get all tasks
++app.get('/tasks', (req, res) => {
++    res.json(tasks);
++});
++
++// Get task by ID
++app.get('/tasks/:id', (req, res) => {
++    const task = tasks.find(t => t.id === parseInt(req.params.id));
++    if (!task) {
++        return res.status(404).json({ message: 'Task not found' });
++    }
++    res.json(task);
++});
++
++// Create a new task
++app.post('/tasks', (req, res) => {
++    const { title } = req.body;
++    if (!title) {
++        return res.status(400).json({ message: 'Title is required' });
++    }
++    const newTask = { id: idCounter++, title, completed: false };
++    tasks.push(newTask);
++    res.status(201).json(newTask);
++});
++
++// Update a task
++app.put('/tasks/:id', (req, res) => {
++    const task = tasks.find(t => t.id === parseInt(req.params.id));
++    if (!task) {
++        return res.status(404).json({ message: 'Task not found' });
++    }
++    task.title = req.body.title || task.title;
++    task.completed = req.body.completed !== undefined ? req.body.completed : task.completed;
++    res.json(task);
++});
++
++// Delete a task
++app.delete('/tasks/:id', (req, res) => {
++    const index = tasks.findIndex(t => t.id === parseInt(req.params.id));
++    if (index === -1) {
++        return res.status(404).json({ message: 'Task not found' });
++    }
++    tasks.splice(index, 1);
++    res.status(204).send();
+ });
+ 
+-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+-
+ const PORT = process.env.PORT || 3000;
+ app.listen(PORT, () => {
+-  console.log(`Server running on http://localhost:${PORT}`);
+-  console.log(`Swagger UI at http://localhost:${PORT}/docs`);
++    console.log(`Server running on port ${PORT}`);
+ });
